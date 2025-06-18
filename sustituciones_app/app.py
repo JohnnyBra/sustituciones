@@ -1,4 +1,5 @@
 import os
+import datetime # Added import
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from werkzeug.utils import secure_filename
 
@@ -180,6 +181,9 @@ def ver_sustituciones_route():
     sorted_counts = sorted(substitution_counts.items(), key=lambda item: (-item[1], item[0]))
     return render_template('ver_sustituciones.html', counts=sorted_counts)
 
+@app.context_processor
+def inject_current_year():
+    return {'current_year': datetime.date.today().year}
 
 if __name__ == '__main__':
     print("Flask app 'app.py' is ready to be run. Use 'flask run' or 'python -m flask run'.")
