@@ -4,8 +4,14 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 from werkzeug.utils import secure_filename
 
 from .pdf_processor import parse_schedule_pdf
-from .data_manager import save_schedules, load_schedules, load_substitution_counts
-from .substitution_logic import find_available_teachers, select_teacher_for_substitution, record_substitution
+from .data_manager import save_schedules, load_schedules, load_substitution_counts, save_substitution_counts
+from .substitution_logic import (
+    find_available_teachers,
+    select_teacher_for_substitution,
+    record_substitution,
+    _get_time_slots_in_range,
+    ALL_DEFINED_30_MIN_SLOTS
+)
 
 app = Flask(__name__)
 app.secret_key = 'os_is_usually_good_enough_for_dev_but_change_this_for_prod' # Replace in production
@@ -156,35 +162,8 @@ def solicitar_sustitucion_route():
                            dias_semana=DIAS_SEMANA,
                            franjas_horarias=FRANJAS_HORARIAS_30_MIN) # Updated to use new constant
 
-from .data_manager import save_schedules, load_schedules, load_substitution_counts, save_substitution_counts
-
-@app.route('/confirmar_sustitucion', methods=['GET', 'POST'])
-def confirmar_sustitucion_route():
-    if request.method == 'POST':
-        profesor_ausente_original = request.form.get('profesor_ausente_original')
-        dia_original = request.form.get('dia_original')
-        hora_original = request.form.get('hora_original')
-        profesor_seleccionado = request.form.get('profesor_seleccionado')
-
-        if not profesor_seleccionado:
-            flash("Debes seleccionar un profesor para realizar la sustitución.", "error")
-            # Need to repopulate GET context if redirecting back to confirm page
-            return redirect(url_for('confirmar_sustitucion_route',
-                                    profesor_ausente=profesor_ausente_original,
-                                    dia_semana=dia_original,
-                                    franja_horaria=hora_original))
-
-        current_counts = load_substitution_counts()
-        updated_counts = record_substitution(profesor_seleccionado, current_counts)
-        save_substitution_counts(updated_counts)
-
-        flash(f"Sustitución asignada a '{profesor_seleccionado}' para el {dia_original} de {hora_original} (ausencia de {profesor_ausente_original}).", "success")
-        return redirect(url_for('solicitar_sustitucion_route')) # Or a new page like 'ver_sustituciones'
-
-    # GET request
-# Import a helper from substitution_logic if it's defined there and needed here
-from .substitution_logic import _get_time_slots_in_range, ALL_DEFINED_30_MIN_SLOTS
-
+# Removed the specific import from here as it's now at the top.
+# from .substitution_logic import _get_time_slots_in_range, ALL_DEFINED_30_MIN_SLOTS
 
 @app.route('/confirmar_sustitucion', methods=['GET', 'POST'])
 def confirmar_sustitucion_route():
