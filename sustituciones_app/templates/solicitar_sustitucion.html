@@ -9,7 +9,7 @@
     </h1>
 
     <p class="text-gray-600 mb-8 text-center">
-        Selecciona el profesor ausente, el día y la franja horaria para la que necesitas una sustitución.
+        Selecciona el profesor ausente, el día y el rango horario para la sustitución.
     </p>
 
     {% if not profesores and not dias_semana and not franjas_horarias %}
@@ -20,11 +20,11 @@
     {% else %}
         <form method="POST" class="space-y-6">
             <div>
-                <label for="profesor_ausente"> {/* No more class, taken from base.html style */}
+                <label for="profesor_ausente">
                     Profesor Ausente:
                 </label>
                 <select id="profesor_ausente" name="profesor_ausente" required
-                        class="mt-1 block w-full"> {# Base 'select' styles from base.html, w-full for width #}
+                        class="mt-1 block w-full">
                     <option value="" disabled {% if not request.form.profesor_ausente %}selected{% endif %}>Selecciona un profesor</option>
                     {% for profesor in profesores %}
                         <option value="{{ profesor }}" {% if request.form.profesor_ausente == profesor %}selected{% endif %}>{{ profesor }}</option>
@@ -45,22 +45,45 @@
                 </select>
             </div>
 
-            <div>
-                <label for="franja_horaria">
-                    Franja Horaria:
-                </label>
-                <select id="franja_horaria" name="franja_horaria" required
-                        class="mt-1 block w-full">
-                    <option value="" disabled {% if not request.form.franja_horaria %}selected{% endif %}>Selecciona una franja horaria</option>
-                    {% for franja in franjas_horarias %}
-                        <option value="{{ franja }}" {% if request.form.franja_horaria == franja %}selected{% endif %}>{{ franja }}</option>
-                    {% endfor %}
-                </select>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-6">
+                <div>
+                    <label for="desde_hora">
+                        Desde Hora:
+                    </label>
+                    <select id="desde_hora" name="desde_hora" required
+                            class="mt-1 block w-full">
+                        <option value="" disabled {% if not request.form.desde_hora %}selected{% endif %}>Selecciona inicio</option>
+                        {% for franja in franjas_horarias %}
+                            <option value="{{ franja }}" {% if request.form.desde_hora == franja %}selected{% endif %}>{{ franja.split('-')[0] }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label for="hasta_hora">
+                        Hasta Hora (inclusive):
+                    </label>
+                    <select id="hasta_hora" name="hasta_hora" required
+                            class="mt-1 block w-full">
+                        <option value="" disabled {% if not request.form.hasta_hora %}selected{% endif %}>Selecciona fin</option>
+                        {% for franja in franjas_horarias %}
+                            {# Mostrar la hora de fin de la franja como opción #}
+                            <option value="{{ franja }}" {% if request.form.hasta_hora == franja %}selected{% endif %}>{{ franja.split('-')[1] }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
             </div>
 
-            <div>
+            <div class="flex items-center mt-2">
+                <input id="dia_completo" name="dia_completo" type="checkbox"
+                       class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                <label for="dia_completo" class="ml-2 block text-sm text-gray-700 hover:text-gray-900 cursor-pointer">
+                    Día Completo (09:00 - 14:00, incluyendo descanso)
+                </label>
+            </div>
+
+            <div class="pt-2">
                 <button type="submit"
-                        class="w-full flex justify-center btn-primary mt-2"> {# Usando la clase base .btn-primary #}
+                        class="w-full flex justify-center btn-primary">
                     <svg class="w-5 h-5 mr-2 -ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                     Buscar Sustituto
                 </button>
@@ -68,4 +91,44 @@
         </form>
     {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const diaCompletoCheckbox = document.getElementById('dia_completo');
+        const desdeHoraSelect = document.getElementById('desde_hora');
+        const hastaHoraSelect = document.getElementById('hasta_hora');
+
+        // Parse franjas_horarias from Jinja, passed as JSON string
+        // Note: 'franjas_horarias' is the name of the variable passed to the template in app.py
+        window.FRANJAS_HORARIAS_DISPONIBLES = JSON.parse('{{ franjas_horarias | tojson | safe }}');
+        const franjasHorarias = window.FRANJAS_HORARIAS_DISPONIBLES;
+
+        function toggleHoraSelects(disabled) {
+            desdeHoraSelect.disabled = disabled;
+            hastaHoraSelect.disabled = disabled;
+            if (disabled) {
+                desdeHoraSelect.value = franjasHorarias[0]; // Value is the full slot e.g. "09:00-09:30"
+                hastaHoraSelect.value = franjasHorarias[franjasHorarias.length - 1];
+            } else {
+                // Optionally reset or leave as is
+                // desdeHoraSelect.value = '';
+                // hastaHoraSelect.value = '';
+            }
+        }
+
+        if (diaCompletoCheckbox && desdeHoraSelect && hastaHoraSelect && franjasHorarias && franjasHorarias.length > 0) {
+            // Initial state based on checkbox (e.g., if form re-rendered with checkbox checked)
+            toggleHoraSelects(diaCompletoCheckbox.checked);
+
+            diaCompletoCheckbox.addEventListener('change', function() {
+                toggleHoraSelects(this.checked);
+            });
+        } else {
+            console.warn("Form elements for time selection or franjas_horarias not found. JS interactivity might be limited.");
+        }
+    });
+</script>
 {% endblock %}

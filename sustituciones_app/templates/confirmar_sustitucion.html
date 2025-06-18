@@ -9,73 +9,129 @@
     </h1>
 
     <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
-        <h2 class="text-xl font-semibold text-blue-700 mb-3">Detalles de la Ausencia:</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2">
-            <p class="text-gray-700"><strong class="font-medium block md:inline">Profesor Ausente:</strong> {{ profesor_ausente }}</p>
-            <p class="text-gray-700"><strong class="font-medium block md:inline">Día:</strong> {{ dia_semana }}</p>
-            <p class="text-gray-700 md:col-span-2"><strong class="font-medium block md:inline">Franja Horaria:</strong> {{ franja_horaria }}</p>
+        <h2 class="text-xl font-semibold text-blue-700 mb-3">Detalles de la Ausencia Solicitada:</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
+            <p class="text-gray-700"><strong class="font-medium">Profesor Ausente:</strong> {{ profesor_ausente }}</p>
+            <p class="text-gray-700"><strong class="font-medium">Día:</strong> {{ dia_semana }}</p>
+            <p class="text-gray-700"><strong class="font-medium">Desde:</strong> {{ rango_desde_hora.split('-')[0] }}</p>
+            <p class="text-gray-700"><strong class="font-medium">Hasta:</strong> {{ rango_hasta_hora.split('-')[1] }}</p>
         </div>
     </div>
 
-    {% if not available_teachers_with_counts %}
+    {% if resultado_busqueda.type == 'error' %}
+        <div class="bg-red-50 border border-red-300 text-red-700 p-4 rounded-lg text-center">
+            <h2 class="text-xl font-semibold mb-2">Error en la Búsqueda</h2>
+            <p>{{ resultado_busqueda.message }}</p>
+            <div class="mt-6">
+                <a href="{{ url_for('solicitar_sustitucion_route') }}" class="btn-secondary inline-flex items-center">
+                    Volver a la Solicitud
+                </a>
+            </div>
+        </div>
+
+    {% elif resultado_busqueda.type == 'none_available' %}
         <div class="bg-yellow-50 border border-yellow-300 rounded-lg p-6 text-center">
             <svg class="mx-auto h-16 w-16 text-yellow-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
             </svg>
             <h2 class="text-2xl font-semibold text-yellow-700 mb-3">No Hay Profesores Disponibles</h2>
             <p class="text-gray-600 mb-6">
-                No se encontraron profesores con horas de refuerzo o guardia disponibles para cubrir esta ausencia en la franja horaria seleccionada.
+                {{ resultado_busqueda.message }} <br>
+                Franjas solicitadas: {{ slots_in_request_range|join(', ') }}.
             </p>
             <div class="mt-6">
                 <a href="{{ url_for('solicitar_sustitucion_route') }}" class="btn-secondary inline-flex items-center">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>
-                    Volver a Intentar
+                     Volver a Intentar
                 </a>
             </div>
         </div>
-    {% else %}
+
+    {% else %} {# 'full_block' or 'individual_slots' #}
         <form method="POST" class="space-y-6">
             <input type="hidden" name="profesor_ausente_original" value="{{ profesor_ausente }}">
             <input type="hidden" name="dia_original" value="{{ dia_semana }}">
-            <input type="hidden" name="hora_original" value="{{ franja_horaria }}">
+            <input type="hidden" name="rango_desde_original_hidden" value="{{ rango_desde_hora }}">
+            <input type="hidden" name="rango_hasta_original_hidden" value="{{ rango_hasta_hora }}">
+            <input type="hidden" name="confirmation_type" value="{{ resultado_busqueda.type }}">
 
-            <div>
-                <h2 class="text-xl font-semibold text-gray-700 mb-4">Selecciona un Profesor Sustituto:</h2>
-                <div class="space-y-3">
-                    {% for teacher_info in available_teachers_with_counts %}
-                        <label for="profesor_{{ loop.index }}"
-                               class="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors duration-150 has-[:checked]:border-blue-500 has-[:checked]:ring-2 has-[:checked]:ring-blue-300 has-[:checked]:bg-blue-50
-                                      {% if teacher_info.name == suggested_teacher and not request.form.profesor_seleccionado %} border-blue-500 ring-2 ring-blue-300 bg-blue-50
-                                      {% elif request.form.profesor_seleccionado == teacher_info.name %} border-blue-500 ring-2 ring-blue-300 bg-blue-50
-                                      {% else %} border-gray-300 {% endif %}">
-                            <input type="radio" id="profesor_{{ loop.index }}" name="profesor_seleccionado" value="{{ teacher_info.name }}"
-                                   class="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300"
-                                   {% if request.form.profesor_seleccionado == teacher_info.name %}checked
-                                   {% elif not request.form.profesor_seleccionado and teacher_info.name == suggested_teacher %}checked
-                                   {% endif %} required>
-                            <span class="ml-3 block text-sm font-medium text-gray-800">
-                                {{ teacher_info.name }}
-                                <span class="block text-xs text-gray-500">
-                                    (Sustituciones actuales: {{ teacher_info.count }})
-                                </span>
+            {% if resultado_busqueda.type == 'full_block' %}
+                <h2 class="text-xl font-semibold text-gray-700 mb-1">Propuesta de Cobertura Completa:</h2>
+                <p class="text-sm text-gray-600 mb-3">El siguiente profesor puede cubrir todas las franjas solicitadas:
+                    <span class="font-medium">{{ resultado_busqueda.slots_covered|join(', ') }}</span>.
+                </p>
+                <div class="p-4 border rounded-lg bg-green-50 border-green-300">
+                    <label for="prof_full_block" class="flex items-center cursor-pointer">
+                        <input type="radio" id="prof_full_block" name="profesor_seleccionado_full_block" value="{{ resultado_busqueda.teacher }}"
+                               class="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300" checked required>
+                        <span class="ml-3 block text-sm font-medium text-gray-800">
+                            {{ resultado_busqueda.teacher }}
+                            <span class="block text-xs text-gray-500">
+                                (Sustituciones actuales: {{ substitution_counts.get(resultado_busqueda.teacher, 0) }})
                             </span>
-                            {% if teacher_info.name == suggested_teacher %}
-                            <span class="ml-auto text-xs bg-blue-100 text-blue-700 font-semibold py-0.5 px-2 rounded-full">Sugerido</span>
+                        </span>
+                        <span class="ml-auto text-xs bg-green-100 text-green-700 font-semibold py-0.5 px-2 rounded-full">Recomendado (Bloque Completo)</span>
+                    </label>
+                </div>
+                 <p class="text-xs text-gray-500 mt-1">Al confirmar, el contador de {{ resultado_busqueda.teacher }} incrementará en {{ resultado_busqueda.slots_covered|length }}.</p>
+
+            {% elif resultado_busqueda.type == 'individual_slots' %}
+                <h2 class="text-xl font-semibold text-gray-700 mb-1">Propuesta de Cobertura Individual por Franja:</h2>
+                <p class="text-sm text-gray-600 mb-3">No se encontró un único profesor para todas las franjas. A continuación se proponen los mejores candidatos para cada franja individual. Puedes desasignar franjas si es necesario.</p>
+                <div class="space-y-4">
+                    {% for detail in resultado_busqueda.details %}
+                        <div class="p-4 border rounded-lg {% if detail.best_candidate %}border-gray-300 hover:bg-gray-50{% else %}bg-yellow-50 border-yellow-300{% endif %}">
+                            <p class="font-semibold text-gray-800 mb-2">{{ detail.slot }}</p>
+                            {% if detail.best_candidate %}
+                                <label for="assign_{{ detail.slot }}" class="flex items-center cursor-pointer">
+                                    <input type="radio" id="assign_{{ detail.slot }}_yes" name="assign_{{ detail.slot }}" value="{{ detail.best_candidate }}"
+                                           class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300" checked>
+                                    <span class="ml-2 text-sm text-gray-700">
+                                        Asignar a: <strong class="font-medium">{{ detail.best_candidate }}</strong>
+                                        (Actuales: {{ substitution_counts.get(detail.best_candidate, 0) }})
+                                    </span>
+                                </label>
+                                <label for="assign_{{ detail.slot }}_no" class="flex items-center cursor-pointer mt-1">
+                                    <input type="radio" id="assign_{{ detail.slot }}_no" name="assign_{{ detail.slot }}" value="NO_ASIGNAR"
+                                           class="h-4 w-4 text-gray-600 focus:ring-gray-500 border-gray-300">
+                                    <span class="ml-2 text-sm text-gray-700">No asignar esta franja</span>
+                                </label>
+                                <!-- Opcional: Mostrar todos los disponibles para este slot -->
+                                <!--
+                                <p class="text-xs text-gray-500 mt-1">Otros disponibles:
+                                    {% for teacher_name in detail.all_available_for_slot %}
+                                        {{ teacher_name }}{% if not loop.last %}, {% endif %}
+                                    {% endfor %}
+                                </p>
+                                -->
+                            {% else %}
+                                <p class="text-sm text-yellow-700 font-medium">No hay profesor disponible para esta franja.</p>
+                                <input type="hidden" name="assign_{{ detail.slot }}" value="NO_ASIGNAR"> {# Asegura que el campo existe en el POST #}
                             {% endif %}
-                        </label>
+                        </div>
                     {% endfor %}
                 </div>
-            </div>
+                <p class="text-xs text-gray-500 mt-1">Al confirmar, el contador de cada profesor asignado incrementará por cada franja de 30 min que cubra.</p>
+            {% endif %}
 
-            <div class="pt-2">
+            {% if necesita_externo %}
+            <div class="mt-6 p-4 bg-red-50 border border-red-300 text-red-700 rounded-lg">
+                <h3 class="font-semibold mb-2">Atención: Necesidad de Personal Externo</h3>
+                <p class="text-sm">
+                    Alguna(s) franja(s) horaria(s) en el rango solicitado no pudieron ser cubiertas por el personal disponible
+                    (o no se ha seleccionado un sustituto para ellas en el modo individual).
+                    Por favor, considera la necesidad de contactar a personal externo para las franjas no asignadas.
+                </p>
+            </div>
+            {% endif %}
+
+            <div class="pt-4">
                 <button type="submit"
                         class="w-full flex items-center justify-center btn-primary">
                     <svg class="w-5 h-5 mr-2 -ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    Confirmar y Asignar Sustitución
+                    Confirmar y Registrar Sustitución(es)
                 </button>
-                 <a href="{{ url_for('solicitar_sustitucion_route') }}" class="mt-3 w-full flex items-center justify-center btn-secondary">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-                    Cancelar y Volver
+                <a href="{{ url_for('solicitar_sustitucion_route') }}" class="mt-3 w-full flex items-center justify-center btn-secondary">
+                     Cancelar y Volver a Solicitud
                 </a>
             </div>
         </form>
