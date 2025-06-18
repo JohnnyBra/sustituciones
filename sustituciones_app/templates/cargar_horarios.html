@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block title %}Cargar Horarios PDF - Gestor de Sustituciones{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto bg-white shadow-lg rounded-lg p-8">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">
+        Cargar Archivo de Horarios (PDF)
+    </h1>
+
+    <p class="text-gray-600 mb-8 text-center">
+        Selecciona el archivo PDF que contiene los horarios de los profesores.
+        El sistema intentará procesar una página por profesor.
+    </p>
+
+    <form method="POST" enctype="multipart/form-data" class="space-y-6">
+        <div>
+            <label for="schedule_pdf_input" class="block text-sm font-medium text-gray-700 mb-1">
+                Archivo PDF:
+            </label>
+            <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-blue-400 transition-colors duration-150 ease-in-out" id="dropzone">
+                <div class="space-y-1 text-center">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    <div class="flex text-sm text-gray-600">
+                        <label for="schedule_pdf_input"
+                               class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
+                            <span>Sube un archivo</span>
+                            <input id="schedule_pdf_input" name="schedule_pdf" type="file" class="sr-only" accept=".pdf" required>
+                        </label>
+                        <p class="pl-1">o arrástralo aquí</p>
+                    </div>
+                    <p class="text-xs text-gray-500" id="file-name-display">
+                        Solo archivos PDF de hasta 10MB.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <button type="submit"
+                    class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-base font-medium text-white bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
+                <svg class="w-5 h-5 mr-2 -ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                Cargar PDF y Procesar
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const fileInput = document.getElementById('schedule_pdf_input');
+        const fileNameDisplay = document.getElementById('file-name-display');
+        const dropzone = document.getElementById('dropzone');
+
+        if (fileInput && fileNameDisplay) {
+            fileInput.addEventListener('change', function(e) {
+                const fileName = e.target.files[0] ? e.target.files[0].name : 'Solo archivos PDF de hasta 10MB.';
+                fileNameDisplay.textContent = fileName;
+                if(e.target.files[0]) {
+                    dropzone.classList.remove('border-gray-300', 'hover:border-blue-400');
+                    dropzone.classList.add('border-green-500');
+                } else {
+                    dropzone.classList.remove('border-green-500');
+                    dropzone.classList.add('border-gray-300', 'hover:border-blue-400');
+                }
+            });
+        }
+
+        if(dropzone) {
+            dropzone.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                dropzone.classList.add('border-blue-400');
+            });
+            dropzone.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!fileInput.files[0]) { // Only remove hover effect if no file is selected
+                    dropzone.classList.remove('border-blue-400');
+                    dropzone.classList.add('border-gray-300');
+                }
+            });
+            dropzone.addEventListener('drop', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                    // Asignar los archivos soltados al input de archivo
+                    fileInput.files = e.dataTransfer.files;
+
+                    // Disparar el evento 'change' manualmente para actualizar el UI
+                    const event = new Event('change', { bubbles: true });
+                    fileInput.dispatchEvent(event);
+                } else {
+                     if (!fileInput.files[0]) {
+                        dropzone.classList.remove('border-blue-400');
+                        dropzone.classList.add('border-gray-300');
+                     }
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
