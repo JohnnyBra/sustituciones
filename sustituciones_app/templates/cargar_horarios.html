@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Cargar Horarios en PDF</h2>
+<p>Selecciona un archivo PDF que contenga los horarios de los profesores. Cada página del PDF debe corresponder al horario de un único profesor.</p>
+<form method="POST" enctype="multipart/form-data" action="{{ url_for('cargar_horarios_route') }}">
+    <div>
+        <label for="schedule_pdf">Archivo PDF de horarios:</label>
+        <input type="file" id="schedule_pdf" name="schedule_pdf" accept=".pdf" required>
+    </div>
+    <div>
+        <input type="submit" value="Cargar PDF y Procesar">
+    </div>
+</form>
+
+{# Optional: Section to display currently loaded schedules summary or link to a view page #}
+{#
+{% if schedules_summary %}
+<h3>Horarios Cargados Actualmente</h3>
+<p>Se han cargado {{ schedules_summary.teacher_count }} horarios de profesores.</p>
+<p><a href="{{ url_for('ver_horarios_route') }}">Ver Horarios Detallados</a></p> {# Assuming you'll create this route #}
+{# {% else %}
+<p>No hay horarios cargados actualmente.</p>
+{% endif %}
+#}
+{% endblock %}

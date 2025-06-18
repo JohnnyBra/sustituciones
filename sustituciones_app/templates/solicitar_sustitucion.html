@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Solicitar Sustitución</h2>
+
+{% if not profesores and not dias_semana and not franjas_horarias %}
+    {# This condition might be too strict if only one is missing, but good for initial setup #}
+    <p>No se han podido cargar los datos necesarios para solicitar una sustitución (horarios, profesores, etc.).</p>
+    <p>Por favor, asegúrate de <a href="{{ url_for('cargar_horarios_route') }}">cargar los horarios primero</a>.</p>
+{% else %}
+    <form method="POST" action="{{ url_for('solicitar_sustitucion_route') }}">
+        <div>
+            <label for="profesor_ausente">Profesor Ausente:</label>
+            <select name="profesor_ausente" id="profesor_ausente" required>
+                <option value="">Selecciona un profesor...</option>
+                {% for profesor in profesores %}
+                <option value="{{ profesor }}">{{ profesor }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <br>
+        <div>
+            <label for="dia_semana">Día de la Semana:</label>
+            <select name="dia_semana" id="dia_semana" required>
+                <option value="">Selecciona un día...</option>
+                {% for dia in dias_semana %}
+                <option value="{{ dia }}">{{ dia }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <br>
+        <div>
+            <label for="franja_horaria">Franja Horaria:</label>
+            <select name="franja_horaria" id="franja_horaria" required>
+                <option value="">Selecciona una franja horaria...</option>
+                {% for franja in franjas_horarias %}
+                <option value="{{ franja }}">{{ franja }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <br>
+        <div>
+            <input type="submit" value="Buscar Sustituto">
+        </div>
+    </form>
+{% endif %}
+
+{% endblock %}

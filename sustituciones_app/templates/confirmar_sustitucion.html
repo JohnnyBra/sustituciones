@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Confirmar Sustitución</h2>
+
+<p>Se necesita una sustitución para el profesor <strong>{{ profesor_ausente }}</strong> el día <strong>{{ dia_semana }}</strong> en la franja horaria de <strong>{{ franja_horaria }}</strong>.</p>
+
+{% if not available_teachers_with_counts %}
+    <div class="flash-warning" style="background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; padding: 10px; border-radius: 3px;">
+        <p><strong>Atención:</strong> No se encontraron profesores disponibles para esta franja horaria y día específico, o el único profesor disponible es el profesor ausente.</p>
+        <p>Por favor, verifica los horarios o considera si la ausencia puede cubrirse de otra manera.</p>
+    </div>
+    <p><a href="{{ url_for('solicitar_sustitucion_route') }}">Volver a la solicitud</a></p>
+{% else %}
+    <form method="POST" action="{{ url_for('confirmar_sustitucion_route') }}">
+        <input type="hidden" name="profesor_ausente_original" value="{{ profesor_ausente }}">
+        <input type="hidden" name="dia_original" value="{{ dia_semana }}">
+        <input type="hidden" name="hora_original" value="{{ franja_horaria }}">
+
+        <h3>Profesores Disponibles:</h3>
+        <p>Selecciona un profesor para realizar la sustitución. El profesor sugerido (si hay uno) tiene el menor número de sustituciones registradas entre los disponibles.</p>
+
+        {% if not suggested_teacher and available_teachers_with_counts %}
+            <p class="flash-info" style="background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; padding: 10px; border-radius: 3px;">
+            Varios profesores tienen el mismo número mínimo de sustituciones. Puedes seleccionar cualquiera de ellos.
+            </p>
+        {% endif %}
+
+        <div style="margin-bottom: 20px;">
+            {% for teacher_info in available_teachers_with_counts %}
+            <div style="margin-bottom: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; {% if teacher_info.name == suggested_teacher %}background-color: #e7f3ff;{% endif %}">
+                <input type="radio" name="profesor_seleccionado" value="{{ teacher_info.name }}" id="prof_{{ loop.index }}" required {% if teacher_info.name == suggested_teacher %}checked{% endif %}>
+                <label for="prof_{{ loop.index }}">
+                    <strong>{{ teacher_info.name }}</strong>
+                    (Sustituciones realizadas: {{ teacher_info.count }})
+                    {% if teacher_info.name == suggested_teacher %} - <em style="color: #007bff;">Sugerido</em>{% endif %}
+                </label>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div>
+            <input type="submit" value="Confirmar Sustitución">
+            <a href="{{ url_for('solicitar_sustitucion_route') }}" style="margin-left: 15px;">Cancelar y Volver</a>
+        </div>
+    </form>
+{% endif %}
+
+{% endblock %}

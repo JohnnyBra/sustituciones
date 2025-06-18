@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Recuento de Sustituciones Realizadas</h2>
+
+{% if counts %}
+    <p>Esta tabla muestra el número de sustituciones que cada profesor ha realizado hasta la fecha.</p>
+    <table border="1" style="width: 60%; border-collapse: collapse; margin-top: 15px;">
+        <thead>
+            <tr style="background-color: #f2f2f2;">
+                <th style="padding: 8px; text-align: left;">Profesor</th>
+                <th style="padding: 8px; text-align: center;">Número de Sustituciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for teacher, count in counts %}
+            <tr>
+                <td style="padding: 8px;">{{ teacher }}</td>
+                <td style="padding: 8px; text-align: center;">{{ count }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <p>Aún no se han registrado sustituciones en el sistema.</p>
+    <p>Puedes <a href="{{ url_for('solicitar_sustitucion_route') }}">solicitar una nueva sustitución</a> o <a href="{{ url_for('cargar_horarios_route') }}">cargar horarios</a> si aún no lo has hecho.</p>
+{% endif %}
+
+{% endblock %}

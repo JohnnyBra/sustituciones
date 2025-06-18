@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Bienvenido al Gestor de Sustituciones</h2>
+<p>Esta aplicación te ayuda a gestionar las sustituciones de profesores de manera eficiente.</p>
+<p>Funcionalidades principales:</p>
+<ul>
+    <li><strong><a href="{{ url_for('cargar_horarios_route') }}">Cargar Horarios</a>:</strong> Sube los horarios de los profesores en formato PDF para procesarlos.</li>
+    <li>(Próximamente) Asignar Sustituciones: Encuentra profesores disponibles y asigna sustituciones.</li>
+    <li>(Próximamente) Ver Horarios: Visualiza los horarios cargados.</li>
+    <li>(Próximamente) Contabilizar Sustituciones: Lleva un registro de las sustituciones realizadas por cada profesor.</li>
+</ul>
+<p>Para comenzar, puedes <a href="{{ url_for('cargar_horarios_route') }}">cargar un archivo PDF con los horarios</a>.</p>
+{% endblock %}
