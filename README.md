@@ -55,16 +55,28 @@ Aplicación web para gestionar las sustituciones de profesores en un colegio. Pe
     ```
 
 5.  **Ejecutar la Aplicación**
-    Navega hasta el directorio que contiene `app.py` (si estás en la raíz, sería `cd sustituciones_app`) y ejecuta la aplicación Flask:
-    ```bash
-    cd sustituciones_app
-    flask run
-    ```
-    O también puedes usar:
-    ```bash
-    python app.py
-    ```
-    (Esto último funcionará si dentro de `app.py` tienes el bloque `if __name__ == '__main__': app.run(debug=True)`).
+    Asegúrate de estar en el **directorio raíz de tu proyecto** (la carpeta que contiene `sustituciones_app/` y `README.md`).
+    Luego, ejecuta la aplicación Flask usando uno de los siguientes métodos:
+
+    *   **Método 1 (recomendado):**
+        ```bash
+        # En Linux/macOS:
+        export FLASK_APP=sustituciones_app.app
+        flask run
+
+        # En Windows:
+        set FLASK_APP=sustituciones_app.app
+        flask run
+        ```
+
+    *   **Método 2 (alternativa concisa):**
+        ```bash
+        # Para todos los sistemas operativos:
+        flask --app sustituciones_app.app run
+        ```
+    Esto asegura que Python maneje correctamente los imports relativos dentro del paquete `sustituciones_app`.
+
+    Si tienes un bloque `if __name__ == '__main__':` en tu `app.py` para ejecutar con `python app.py`, ten en cuenta que este método de ejecución (`python sustituciones_app/app.py` desde la raíz) también podría causar el `ImportError` si no se maneja la ruta del paquete explícitamente. Por ello, usar `flask run` como se describe arriba es más robusto para aplicaciones empaquetadas.
 
 6.  **Acceder a la Aplicación**
     Abre tu navegador web y ve a la dirección que se muestra en la terminal (generalmente `http://127.0.0.1:5000/`).
